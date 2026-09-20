@@ -1,72 +1,205 @@
 # Enterprise-Hardware-Staging-Endpoint-Imaging-Lab
 
-# Cisco Catalyst 2960 — Basic Switch Configuration
+# Enterprise Hardware Staging & Endpoint Imaging Lab
 
-## What I was trying to do
+## Project Goal
 
-I started building a small enterprise-style hardware staging lab using a Cisco Catalyst 2960 and a Dell OptiPlex 7060.
+I'm building a small enterprise-style hardware staging and endpoint imaging lab using a Cisco Catalyst 2960X and a Dell OptiPlex 7060.
 
-The goal is to use the lab to practice Cisco switching, endpoint staging, Windows deployment, and troubleshooting instead of just following tutorials.
+The goal of this project is to get hands-on experience with Cisco switching, networking, Windows deployment, endpoint configuration, and troubleshooting.
 
-## Equipment
+I don't want this to just be a documentation project. I'm using the equipment to actually practice the concepts and troubleshoot problems myself.
 
-* Cisco Catalyst 2960
+---
+
+# Phase 1 — Cisco Switch Setup
+
+## Hardware
+
+* Cisco Catalyst 2960X-48LPS-L
 * Dell OptiPlex 7060
 * Ethernet cables
 * Console cable
-* Windows PC for switch configuration
+* Windows PC with PuTTY
 
-## What I configured
+## Console Access
 
-I connected to the Cisco 2960 through the console port and went through the initial setup.
+I connected to the Cisco switch through the console port using PuTTY.
 
-I configured:
+The switch was running:
 
-* Switch hostname: `STAGING-SW`
-* Enable secret for privileged access
-* Management interface
-* Management IP addressing
-* Subnet mask
-* Default gateway
+* Cisco IOS 15.2(7)E9
+* C2960X-UNIVERSALK9-M
+* Catalyst 2960X-48LPS-L
 
-I also learned how to move between the different Cisco IOS modes:
+I used the Cisco console connection to access the IOS CLI and complete the initial configuration.
 
-```text
-STAGING-SW>       User EXEC
-STAGING-SW#       Privileged EXEC
-STAGING-SW(config)#   Global configuration
-```
+## Basic Configuration
 
-## Networking concepts I learned
-
-One of the main things I wanted to understand was how the switch actually fits into the network.
-
-My lab network is using a `/24` subnet, which means the subnet mask is:
+I configured the switch hostname as:
 
 ```text
-255.255.255.0
+STAGING-SW1
 ```
 
-The switch needs a management IP so I can communicate with and manage it over the network.
+I also configured privileged access authentication and a management interface.
 
-I also learned the difference between a switch's physical Ethernet ports and its management interface. The management interface gives the switch an IP address for management, while the physical switch ports are used to connect devices to the network.
+The switch management interface is currently using VLAN 1.
 
-## Troubleshooting approach
+For my actual home lab, the switch was assigned a management IP on my local network.
 
-I'm trying to build the habit of troubleshooting from the bottom up instead of randomly changing settings.
+I am intentionally not documenting my actual home-network IP addresses or passwords in this repository.
 
-My basic process is:
+---
 
-1. Check the physical connection and link lights.
-2. Check whether the switch port is up.
-3. Check the VLAN assigned to the port.
-4. Check whether the switch is learning the device's MAC address.
-5. Check the device's IP address and subnet mask.
-6. Check the default gateway.
-7. Test connectivity with ping.
-8. If the network works, move up to DNS, firewall, and application-level troubleshooting.
+# What I Learned
 
+## Cisco IOS Modes
 
-The goal is to eventually turn this into a small-scale simulation of an enterprise endpoint staging environment.
+I learned that Cisco IOS uses different command modes depending on what I'm doing.
 
+```text
+STAGING-SW1>
+```
 
+User EXEC mode.
+
+```text
+STAGING-SW1#
+```
+
+Privileged EXEC mode.
+
+Configuration mode can be entered from privileged EXEC mode when changes need to be made.
+
+One thing I learned from doing the setup myself is that the prompt is useful because it tells me what level of access I currently have.
+
+---
+
+## Management IP vs Physical Switch Ports
+
+The switch has physical Ethernet interfaces such as:
+
+```text
+Gi1/0/1
+Gi1/0/2
+Gi1/0/3
+...
+Gi1/0/48
+```
+
+These are the ports where endpoints can physically connect.
+
+The switch also has a logical management interface:
+
+```text
+Vlan1
+```
+
+The management interface has an IP address so the switch can communicate at Layer 3 for management purposes.
+
+This helped me understand that the switch's physical Ethernet ports and its management interface are not the same thing.
+
+---
+
+# Commands I Used
+
+### Check switch information
+
+```text
+show version
+```
+
+This showed me the switch model, IOS version, uptime, hardware information, and interfaces.
+
+### View the active configuration
+
+```text
+show running-config
+```
+
+This showed the configuration currently running on the switch.
+
+### Check interface status
+
+```text
+show interfaces status
+```
+
+This showed the physical switch ports, whether they were connected, their VLAN, speed, duplex, and interface type.
+
+---
+
+# Troubleshooting Lessons
+
+One of the biggest things I want to take away from this project is learning how to troubleshoot systematically.
+
+Instead of immediately changing configurations, I want to work from the physical layer upward.
+
+My basic troubleshooting process is:
+
+1. Check the physical connection.
+2. Check link lights and interface status.
+3. Check the switch port.
+4. Check the VLAN.
+5. Check MAC address learning.
+6. Check the endpoint's IP configuration.
+7. Check the subnet mask and gateway.
+8. Test connectivity with ping.
+9. Move to DNS, firewall, services, or applications if the basic network is working.
+
+This gives me a structured way to troubleshoot instead of guessing.
+
+---
+
+# Important Discovery
+
+When I checked the interface status, I initially noticed:
+
+```text
+Fa0    disabled    routed
+```
+
+I learned that this is not the normal endpoint port I should use on this switch.
+
+The actual Ethernet ports on this Catalyst 2960X are:
+
+```text
+Gi1/0/1 - Gi1/0/48
+```
+
+This was a good lesson in checking the actual hardware and interface inventory instead of assuming the port names from another Cisco model.
+
+---
+
+# Current Lab Status
+
+The Cisco switch is configured and the basic management setup is complete.
+
+The Dell OptiPlex 7060 has not yet been connected to the switch for the endpoint portion of the lab.
+
+## Next Steps
+
+* Connect Dell OptiPlex 7060 to `Gi1/0/1`
+* Verify physical link
+* Learn MAC address table behavior
+* Configure endpoint staging VLAN
+* Configure access ports
+* Test connectivity
+* Learn trunking
+* Learn basic STP/Rapid PVST
+* Configure management VLAN
+* Practice SSH management
+* Build Windows 11 reference endpoint
+* Practice endpoint imaging/deployment
+* Apply applications and security configuration
+* Perform endpoint validation
+* Document troubleshooting scenarios
+
+---
+
+# Project Objective
+
+The final goal is to simulate an enterprise endpoint staging workflow where multiple Windows endpoints can be connected to a controlled staging network, configured, imaged, tested, and prepared for deployment.
+
+I'm using the lab to build practical skills that apply to NOC, data center, desktop support, endpoint support, and network support roles.
