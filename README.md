@@ -1,5 +1,3 @@
-# Enterprise-Hardware-Staging-Endpoint-Imaging-Lab
-
 # Enterprise Hardware Staging & Endpoint Imaging Lab
 
 ## Project Goal
