@@ -1,7 +1,5 @@
 # Enterprise Hardware Staging & Endpoint Imaging Lab
 
-# Day 1 — Cisco Switching & Endpoint Connectivity
-
 Today I started building the networking side of my Enterprise Hardware Staging & Endpoint Imaging Lab.
 
 The goal is to make this more than just a project I can put on my resume. I want to actually understand what is happening when a workstation connects to a switch, how VLANs work, how the switch learns devices, and how to troubleshoot connectivity problems.
