@@ -1,203 +1,287 @@
 # Enterprise Hardware Staging & Endpoint Imaging Lab
 
-## Project Goal
+# Day 1 — Cisco Switching & Endpoint Connectivity
 
-I'm building a small enterprise-style hardware staging and endpoint imaging lab using a Cisco Catalyst 2960X and a Dell OptiPlex 7060.
+Today I started building the networking side of my Enterprise Hardware Staging & Endpoint Imaging Lab.
 
-The goal of this project is to get hands-on experience with Cisco switching, networking, Windows deployment, endpoint configuration, and troubleshooting.
-
-I don't want this to just be a documentation project. I'm using the equipment to actually practice the concepts and troubleshoot problems myself.
-
----
-
-# Phase 1 — Cisco Switch Setup
+The goal is to make this more than just a project I can put on my resume. I want to actually understand what is happening when a workstation connects to a switch, how VLANs work, how the switch learns devices, and how to troubleshoot connectivity problems.
 
 ## Hardware
 
 * Cisco Catalyst 2960X-48LPS-L
 * Dell OptiPlex 7060
-* Ethernet cables
-* Console cable
-* Windows PC with PuTTY
+* Windows 11 workstation
+* Ethernet cable
+* PuTTY for Cisco console access
 
-## Console Access
+## Cisco Switch Setup
 
-I connected to the Cisco switch through the console port using PuTTY.
+I connected to the Cisco switch through the console using PuTTY and completed the initial setup.
 
-The switch was running:
+Configured:
 
-* Cisco IOS 15.2(7)E9
-* C2960X-UNIVERSALK9-M
-* Catalyst 2960X-48LPS-L
+* Switch hostname
+* Enable authentication
+* Management interface
+* Management IP
+* Subnet configuration
+* Basic switch management settings
 
-I used the Cisco console connection to access the IOS CLI and complete the initial configuration.
-
-## Basic Configuration
-
-I configured the switch hostname as:
-
-```text
-STAGING-SW1
-```
-
-I also configured privileged access authentication and a management interface.
-
-The switch management interface is currently using VLAN 1.
-
-For my actual home lab, the switch was assigned a management IP on my local network.
-
-I am intentionally not documenting my actual home-network IP addresses or passwords in this repository.
-
----
-
-# What I Learned
-
-## Cisco IOS Modes
-
-I learned that Cisco IOS uses different command modes depending on what I'm doing.
+The switch is currently using:
 
 ```text
-STAGING-SW1>
+Hostname: STAGING-SW1
+Management IP: 192.168.12.2
+Subnet Mask: 255.255.255.0
+Management VLAN: VLAN 1
 ```
 
-User EXEC mode.
+I am not putting passwords or other sensitive information in this repository.
 
-```text
-STAGING-SW1#
-```
+## First Endpoint Connection
 
-Privileged EXEC mode.
-
-Configuration mode can be entered from privileged EXEC mode when changes need to be made.
-
-One thing I learned from doing the setup myself is that the prompt is useful because it tells me what level of access I currently have.
-
----
-
-## Management IP vs Physical Switch Ports
-
-The switch has physical Ethernet interfaces such as:
+I connected the Dell OptiPlex 7060 to:
 
 ```text
 Gi1/0/1
-Gi1/0/2
-Gi1/0/3
-...
-Gi1/0/48
 ```
 
-These are the ports where endpoints can physically connect.
-
-The switch also has a logical management interface:
-
-```text
-Vlan1
-```
-
-The management interface has an IP address so the switch can communicate at Layer 3 for management purposes.
-
-This helped me understand that the switch's physical Ethernet ports and its management interface are not the same thing.
-
----
-
-# Commands I Used
-
-### Check switch information
-
-```text
-show version
-```
-
-This showed me the switch model, IOS version, uptime, hardware information, and interfaces.
-
-### View the active configuration
-
-```text
-show running-config
-```
-
-This showed the configuration currently running on the switch.
-
-### Check interface status
+I checked the port with:
 
 ```text
 show interfaces status
 ```
 
-This showed the physical switch ports, whether they were connected, their VLAN, speed, duplex, and interface type.
-
----
-
-# Troubleshooting Lessons
-
-One of the biggest things I want to take away from this project is learning how to troubleshoot systematically.
-
-Instead of immediately changing configurations, I want to work from the physical layer upward.
-
-My basic troubleshooting process is:
-
-1. Check the physical connection.
-2. Check link lights and interface status.
-3. Check the switch port.
-4. Check the VLAN.
-5. Check MAC address learning.
-6. Check the endpoint's IP configuration.
-7. Check the subnet mask and gateway.
-8. Test connectivity with ping.
-9. Move to DNS, firewall, services, or applications if the basic network is working.
-
-This gives me a structured way to troubleshoot instead of guessing.
-
----
-
-# Important Discovery
-
-When I checked the interface status, I initially noticed:
+The port came up as:
 
 ```text
-Fa0    disabled    routed
+connected
+a-full
+a-1000
+10/100/1000BaseTX
 ```
 
-I learned that this is not the normal endpoint port I should use on this switch.
+This confirmed that the physical Ethernet connection was working and the workstation negotiated a 1 Gbps full-duplex connection.
 
-The actual Ethernet ports on this Catalyst 2960X are:
+## MAC Address Learning
+
+I then checked the switch's MAC address table:
 
 ```text
-Gi1/0/1 - Gi1/0/48
+show mac address-table
 ```
 
-This was a good lesson in checking the actual hardware and interface inventory instead of assuming the port names from another Cisco model.
+The switch learned the OptiPlex's Ethernet MAC address:
 
----
+```text
+6c02.e048.4eee
+```
 
-# Current Lab Status
+on:
 
-The Cisco switch is configured and the basic management setup is complete.
+```text
+Gi1/0/1
+```
 
-The Dell OptiPlex 7060 has not yet been connected to the switch for the endpoint portion of the lab.
+The entry was dynamic.
+
+This was one of the first things I wanted to actually see instead of just reading about it. The switch is learning the source MAC address from Ethernet traffic and associating it with the physical port where it was received.
+
+## Interface Troubleshooting
+
+I also checked:
+
+```text
+show interfaces gi1/0/1
+```
+
+The interface showed:
+
+* Full duplex
+* 1000 Mb/s
+* 0 input errors
+* 0 CRC errors
+* 0 collisions
+* 0 output errors
+* No output drops
+
+This gave me practice reading interface counters instead of just looking at whether a port says "connected."
+
+I learned that interface counters and the 5-minute traffic rate are different things. The interface can have packets received historically while the current 5-minute rate can still be 0 if there is little or no traffic happening at that moment.
+
+## First Connectivity Problem
+
+I initially tried to ping the Cisco management IP from the OptiPlex and got:
+
+```text
+Destination host unreachable
+```
+
+At first it looked like the Cisco configuration might be wrong.
+
+I started troubleshooting from the bottom up instead of immediately changing configuration.
+
+I checked:
+
+1. Physical connection
+2. Switch port status
+3. MAC address learning
+4. VLAN assignment
+5. Switch management interface
+6. Windows IP configuration
+7. ARP
+
+## What I Found
+
+The OptiPlex actually had multiple network adapters.
+
+The Wi-Fi adapter had:
+
+```text
+192.168.12.163/24
+```
+
+but the Ethernet adapter connected to the Cisco had:
+
+```text
+169.254.164.253/16
+```
+
+The Ethernet adapter also had no default gateway.
+
+The Cisco had already learned the Ethernet adapter's MAC address, so the physical connection was working. The problem was that the wired Windows interface did not have an address on the same network as the Cisco management interface.
+
+This was a good lesson for me because I initially looked at the computer's IP address and assumed it belonged to the Ethernet connection. It actually belonged to Wi-Fi.
+
+## Testing With a Static IP
+
+For testing, I temporarily configured the wired Ethernet adapter with:
+
+```text
+IP Address: 192.168.12.164
+Subnet Mask: 255.255.255.0
+Default Gateway: blank
+```
+
+I temporarily disabled Wi-Fi so I could test the wired connection by itself.
+
+Then I tested:
+
+```text
+ping 192.168.12.2
+```
+
+The result was:
+
+```text
+Reply from 192.168.12.2
+Reply from 192.168.12.2
+Reply from 192.168.12.2
+```
+
+The first packet timed out, but the following packets succeeded.
+
+## ARP
+
+After the successful ping, I checked:
+
+```text
+arp -a
+```
+
+The Ethernet interface showed:
+
+```text
+192.168.12.2
+30-8b-b2-29-78-40
+dynamic
+```
+
+This showed that the OptiPlex successfully resolved the Cisco's IP address to its MAC address using ARP.
+
+This helped me understand the relationship between:
+
+```text
+IP address → MAC address → switch port
+```
+
+The switch also learned the OptiPlex's MAC address:
+
+```text
+6c02.e048.4eee → Gi1/0/1
+```
+
+So I was able to see both sides of the process instead of just memorizing what ARP and MAC tables are.
+
+## What I Learned Today
+
+The biggest thing I learned today was to troubleshoot in layers instead of randomly changing settings.
+
+My current troubleshooting process is:
+
+```text
+Physical link
+     ↓
+Interface status
+     ↓
+MAC address learning
+     ↓
+VLAN
+     ↓
+IP configuration
+     ↓
+ARP
+     ↓
+Ping / connectivity
+```
+
+I also learned:
+
+* A switch can have a physical Ethernet interface and a separate logical management interface.
+* A switch learns MAC addresses dynamically from incoming Ethernet frames.
+* VLAN 1 is currently the default VLAN on my switch ports.
+* A `169.254.x.x` address on Windows can indicate that the Ethernet adapter did not receive a DHCP address.
+* A computer can have multiple network adapters with completely different IP configurations.
+* `arp -a` can be useful when troubleshooting local IPv4 connectivity.
+* `show interfaces` gives much more information than simply checking whether a port is connected.
+* The first packet of a ping can sometimes be lost while address resolution is taking place.
+
+## Current Status
+
+Cisco switch:
+
+```text
+STAGING-SW1
+192.168.12.2/24
+VLAN 1
+```
+
+Dell OptiPlex wired Ethernet:
+
+```text
+192.168.12.164/24
+```
+
+Connectivity between the wired OptiPlex and Cisco management interface:
+
+```text
+WORKING
+```
 
 ## Next Steps
 
-* Connect Dell OptiPlex 7060 to `Gi1/0/1`
-* Verify physical link
-* Learn MAC address table behavior
-* Configure endpoint staging VLAN
-* Configure access ports
-* Test connectivity
-* Learn trunking
-* Learn basic STP/Rapid PVST
-* Configure management VLAN
-* Practice SSH management
-* Build Windows 11 reference endpoint
-* Practice endpoint imaging/deployment
-* Apply applications and security configuration
-* Perform endpoint validation
-* Document troubleshooting scenarios
+Tomorrow I want to continue with:
 
----
+* Understanding VLANs
+* Creating a dedicated staging VLAN
+* Configuring switch access ports
+* Understanding trunk ports
+* Learning more about MAC address tables
+* Setting up DHCP for the lab
+* Testing DHCP vs static addressing
+* Basic switch security
+* SSH management
+* Windows endpoint staging
+* Eventually building the imaging/deployment portion of the project
 
-# Project Objective
-
-The final goal is to simulate an enterprise endpoint staging workflow where multiple Windows endpoints can be connected to a controlled staging network, configured, imaged, tested, and prepared for deployment.
-
-I'm using the lab to build practical skills that apply to NOC, data center, desktop support, endpoint support, and network support roles.
+The main goal is to keep learning by actually doing the configuration and troubleshooting instead of just following commands.
