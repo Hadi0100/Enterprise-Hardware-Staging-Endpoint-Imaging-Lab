@@ -233,20 +233,4 @@ Connectivity between the wired OptiPlex and Cisco management interface:
 WORKING
 ```
 
-## Next Steps
-
-Tomorrow I want to continue with:
-
-* Understanding VLANs
-* Creating a dedicated staging VLAN
-* Configuring switch access ports
-* Understanding trunk ports
-* Learning more about MAC address tables
-* Setting up DHCP for the lab
-* Testing DHCP vs static addressing
-* Basic switch security
-* SSH management
-* Windows endpoint staging
-* Eventually building the imaging/deployment portion of the project
-
 The main goal is to keep learning by actually doing the configuration and troubleshooting instead of just following commands.
