@@ -31,12 +31,12 @@ The switch is currently using:
 
 ```text
 Hostname: STAGING-SW1
-Management IP: 192.168.12.2
-Subnet Mask: 255.255.255.0
+Management IP: Private lab address
+Subnet Mask: /24
 Management VLAN: VLAN 1
 ```
 
-I am not putting passwords or other sensitive information in this repository.
+I am not putting passwords, actual IP addresses, MAC addresses, or other sensitive information in this repository.
 
 ## First Endpoint Connection
 
@@ -71,13 +71,7 @@ I then checked the switch's MAC address table:
 show mac address-table
 ```
 
-The switch learned the OptiPlex's Ethernet MAC address:
-
-```text
-6c02.e048.4eee
-```
-
-on:
+The switch learned the OptiPlex's Ethernet MAC address on:
 
 ```text
 Gi1/0/1
@@ -111,7 +105,7 @@ I learned that interface counters and the 5-minute traffic rate are different th
 
 ## First Connectivity Problem
 
-I initially tried to ping the Cisco management IP from the OptiPlex and got:
+I initially tried to ping the Cisco management interface from the OptiPlex and got:
 
 ```text
 Destination host unreachable
@@ -135,17 +129,7 @@ I checked:
 
 The OptiPlex actually had multiple network adapters.
 
-The Wi-Fi adapter had:
-
-```text
-192.168.12.163/24
-```
-
-but the Ethernet adapter connected to the Cisco had:
-
-```text
-169.254.164.253/16
-```
+The Wi-Fi adapter had an address on the home network, but the Ethernet adapter connected to the Cisco had a `169.254.x.x` link-local address.
 
 The Ethernet adapter also had no default gateway.
 
@@ -155,31 +139,21 @@ This was a good lesson for me because I initially looked at the computer's IP ad
 
 ## Testing With a Static IP
 
-For testing, I temporarily configured the wired Ethernet adapter with:
+For testing, I temporarily configured the wired Ethernet adapter with a static address on the same private /24 lab network as the Cisco management interface.
 
-```text
-IP Address: 192.168.12.164
-Subnet Mask: 255.255.255.0
-Default Gateway: blank
-```
+The default gateway was left blank because I was only testing local connectivity between the workstation and switch.
 
 I temporarily disabled Wi-Fi so I could test the wired connection by itself.
 
-Then I tested:
+Then I tested connectivity to the Cisco management interface with:
 
 ```text
-ping 192.168.12.2
-```
-
-The result was:
-
-```text
-Reply from 192.168.12.2
-Reply from 192.168.12.2
-Reply from 192.168.12.2
+ping <switch-management-address>
 ```
 
 The first packet timed out, but the following packets succeeded.
+
+This confirmed that the wired OptiPlex could communicate with the Cisco switch management interface.
 
 ## ARP
 
@@ -189,13 +163,7 @@ After the successful ping, I checked:
 arp -a
 ```
 
-The Ethernet interface showed:
-
-```text
-192.168.12.2
-30-8b-b2-29-78-40
-dynamic
-```
+The Ethernet interface showed a dynamic ARP entry for the Cisco management interface.
 
 This showed that the OptiPlex successfully resolved the Cisco's IP address to its MAC address using ARP.
 
@@ -205,11 +173,7 @@ This helped me understand the relationship between:
 IP address → MAC address → switch port
 ```
 
-The switch also learned the OptiPlex's MAC address:
-
-```text
-6c02.e048.4eee → Gi1/0/1
-```
+The switch also learned the OptiPlex's MAC address on `Gi1/0/1`.
 
 So I was able to see both sides of the process instead of just memorizing what ARP and MAC tables are.
 
@@ -244,7 +208,8 @@ I also learned:
 * A computer can have multiple network adapters with completely different IP configurations.
 * `arp -a` can be useful when troubleshooting local IPv4 connectivity.
 * `show interfaces` gives much more information than simply checking whether a port is connected.
-* The first packet of a ping can sometimes be lost while address resolution is taking place.
+* ARP maps an IPv4 address to a MAC address on the local network.
+* The first ping timed out while the following packets succeeded, which gave me a reason to investigate ARP and verify the Ethernet connection instead of assuming the configuration was broken.
 
 ## Current Status
 
@@ -252,14 +217,14 @@ Cisco switch:
 
 ```text
 STAGING-SW1
-192.168.12.2/24
+Private /24 management network
 VLAN 1
 ```
 
 Dell OptiPlex wired Ethernet:
 
 ```text
-192.168.12.164/24
+Static address on the private /24 lab network
 ```
 
 Connectivity between the wired OptiPlex and Cisco management interface:
